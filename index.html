@@ -1,0 +1,2251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>National Parks of India — Learn & Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --forest: #1a3a2a;
+    --deep: #0d2218;
+    --leaf: #3d7a4f;
+    --mint: #7ec8a0;
+    --gold: #e8a020;
+    --sand: #f5e9d0;
+    --cream: #fdf8ef;
+    --bark: #8b5e3c;
+    --red: #c0392b;
+    --sky: #5b9ec9;
+    --text: #1c1c1c;
+    --muted: #6b7a6b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--forest);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 1.2rem;
+    font-weight: 900;
+    padding: 1rem 2rem 1rem 0;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    margin-right: 1rem;
+    white-space: nowrap;
+  }
+  .nav-tabs { display: flex; gap: 0; }
+  .nav-tab {
+    color: rgba(255,255,255,0.7);
+    padding: 1.1rem 1.5rem;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+  }
+  .nav-tab:hover { color: white; background: rgba(255,255,255,0.05); }
+  .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--forest) 0%, #2d5a3a 50%, var(--forest) 100%);
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: white;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .hero h1 span { color: var(--gold); }
+  .hero p {
+    color: rgba(255,255,255,0.75);
+    margin-top: 0.75rem;
+    font-size: 1rem;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 2rem;
+    color: var(--gold);
+    font-weight: 700;
+    display: block;
+  }
+  .hero-stat .label { color: rgba(255,255,255,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* LEARN PAGE */
+  .learn-container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+  .learn-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem 1.2rem;
+    border: 2px solid rgba(61,122,79,0.3);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    background: white;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .search-box:focus { border-color: var(--leaf); }
+  .filter-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--leaf);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--leaf);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .filter-btn.active, .filter-btn:hover { background: var(--leaf); color: white; }
+
+  .states-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .state-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border: 1px solid rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .state-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+
+  .card-header {
+    background: linear-gradient(135deg, var(--forest), var(--leaf));
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .state-icon {
+    width: 42px; height: 42px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .state-name {
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .park-count {
+    margin-left: auto;
+    background: var(--gold);
+    color: var(--forest);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+
+  .card-body { padding: 1.2rem 1.5rem; }
+
+  .mnemonic-box {
+    background: linear-gradient(135deg, #fffbf0, #fff8e8);
+    border: 1px solid rgba(232,160,32,0.3);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1.1rem;
+  }
+  .mnemonic-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--bark);
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .mnemonic-text {
+    font-size: 0.9rem;
+    color: #5a3e10;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .parks-list { list-style: none; }
+  .parks-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+    font-size: 0.88rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 4px;
+    padding-left: 0.3rem;
+  }
+  .parks-list li:last-child { border-bottom: none; }
+  .parks-list li:hover { background: rgba(61,122,79,0.06); padding-left: 0.6rem; }
+  .parks-list li::before {
+    content: '🌿';
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+  .park-link-name { color: var(--forest); font-weight: 500; }
+  .parks-list li.highlight { background: rgba(61,122,79,0.1); }
+
+  /* MAP PAGE */
+  .map-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+  .map-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .map-wrapper { grid-template-columns: 1fr; } }
+
+  .india-map-area {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+  }
+  .india-map-area h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--forest);
+    margin-bottom: 1rem;
+  }
+
+  #india-svg { width: 100%; height: auto; }
+  .state-region {
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .state-region:hover { opacity: 0.8; }
+
+  .map-legend {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+  }
+  .map-legend h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--forest);
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--sand);
+  }
+  .legend-item {
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.6rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .legend-item:hover, .legend-item.selected { background: var(--sand); border-color: rgba(61,122,79,0.2); }
+  .legend-state { font-weight: 600; font-size: 0.9rem; color: var(--forest); }
+  .legend-count { font-size: 0.75rem; color: var(--muted); }
+  .legend-scroll { max-height: 500px; overflow-y: auto; }
+
+  .map-popup {
+    position: fixed;
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border: 1px solid rgba(0,0,0,0.08);
+    max-width: 280px;
+    z-index: 500;
+    display: none;
+  }
+  .map-popup .pop-state {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--forest);
+    margin-bottom: 0.5rem;
+  }
+  .map-popup ul { font-size: 0.82rem; padding-left: 1rem; }
+  .map-popup ul li { padding: 0.2rem 0; }
+  .map-popup .close-pop {
+    float: right;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  /* QUIZ PAGE */
+  .quiz-container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+  .quiz-setup {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+  }
+  .quiz-setup h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--forest);
+    margin-bottom: 1.5rem;
+  }
+  .setup-row {
+    margin-bottom: 1.5rem;
+  }
+  .setup-row label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+  .option-pills { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .option-pill {
+    padding: 0.55rem 1.2rem;
+    border: 2px solid rgba(61,122,79,0.3);
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .option-pill:hover { border-color: var(--leaf); color: var(--leaf); }
+  .option-pill.selected { border-color: var(--leaf); background: var(--leaf); color: white; }
+
+  .start-quiz-btn {
+    background: linear-gradient(135deg, var(--forest), var(--leaf));
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 1rem;
+    letter-spacing: 0.02em;
+  }
+  .start-quiz-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,58,42,0.3); }
+
+  .quiz-active { display: none; }
+  .quiz-progress-bar {
+    background: rgba(61,122,79,0.15);
+    border-radius: 10px;
+    height: 8px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--leaf), var(--mint));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+  .quiz-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    font-family: 'Space Mono', monospace;
+  }
+  .score-badge {
+    background: var(--forest);
+    color: var(--gold);
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+
+  .question-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+  }
+  .q-type-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+  .q-type-badge.mcq { background: rgba(91,158,201,0.15); color: var(--sky); }
+  .q-type-badge.fitb { background: rgba(232,160,32,0.15); color: var(--bark); }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem;
+    color: var(--forest);
+    line-height: 1.4;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+  }
+  .question-text em { color: var(--leaf); font-style: normal; border-bottom: 2px dashed var(--mint); }
+
+  .mcq-options { display: flex; flex-direction: column; gap: 0.75rem; }
+  .mcq-option {
+    padding: 0.9rem 1.2rem;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    transition: all 0.2s;
+    background: white;
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 0.8rem;
+  }
+  .mcq-option:hover:not(:disabled) { border-color: var(--leaf); background: rgba(61,122,79,0.04); }
+  .mcq-option.correct { border-color: #27ae60; background: rgba(39,174,96,0.1); color: #1a7040; }
+  .mcq-option.wrong { border-color: var(--red); background: rgba(192,57,43,0.08); color: var(--red); }
+  .mcq-option.reveal { border-color: #27ae60; background: rgba(39,174,96,0.06); }
+  .mcq-option:disabled { cursor: default; }
+  .opt-letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    background: rgba(0,0,0,0.06);
+    flex-shrink: 0;
+  }
+  .mcq-option.correct .opt-letter { background: #27ae60; color: white; }
+  .mcq-option.wrong .opt-letter { background: var(--red); color: white; }
+
+  .fitb-area { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .fitb-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.9rem 1.2rem;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .fitb-input:focus { border-color: var(--leaf); }
+  .fitb-input.correct { border-color: #27ae60; background: rgba(39,174,96,0.08); }
+  .fitb-input.wrong { border-color: var(--red); background: rgba(192,57,43,0.06); }
+  .fitb-submit {
+    padding: 0.9rem 1.5rem;
+    background: var(--leaf);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .fitb-submit:hover { background: var(--forest); }
+
+  .feedback-box {
+    margin-top: 1.2rem;
+    padding: 1rem 1.2rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .feedback-box.correct { background: rgba(39,174,96,0.12); color: #1a7040; border: 1px solid rgba(39,174,96,0.3); }
+  .feedback-box.wrong { background: rgba(192,57,43,0.08); color: #8b1a1a; border: 1px solid rgba(192,57,43,0.2); }
+  .feedback-box .fb-label { font-weight: 700; margin-bottom: 0.3rem; }
+
+  .next-btn {
+    background: var(--forest);
+    color: white;
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    display: none;
+    transition: background 0.2s;
+    margin-top: 1rem;
+  }
+  .next-btn:hover { background: var(--leaf); }
+
+  /* RESULTS */
+  .quiz-results {
+    display: none;
+    background: white;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+  }
+  .results-emoji { font-size: 4rem; margin-bottom: 1rem; }
+  .results-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--forest);
+    margin-bottom: 0.5rem;
+  }
+  .results-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 3.5rem;
+    color: var(--gold);
+    font-weight: 700;
+    margin: 1rem 0;
+  }
+  .results-msg { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
+  .results-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .result-btn {
+    padding: 0.85rem 1.8rem;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid;
+  }
+  .result-btn.primary { background: var(--forest); color: white; border-color: var(--forest); }
+  .result-btn.primary:hover { background: var(--leaf); border-color: var(--leaf); }
+  .result-btn.secondary { background: transparent; color: var(--forest); border-color: var(--forest); }
+  .result-btn.secondary:hover { background: var(--forest); color: white; }
+
+  /* SCROLL */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+  ::-webkit-scrollbar-thumb { background: var(--leaf); border-radius: 3px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .states-grid { grid-template-columns: 1fr; }
+    .hero-stats { gap: 1.5rem; }
+    .quiz-container, .learn-container, .map-container { padding: 1rem; }
+  }
+
+  .hidden { display: none !important; }
+  .state-card.filtered-out { display: none; }
+
+  /* EDIT MODE */
+  .edit-mode-toggle {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.5rem 1rem;
+    background: rgba(232,160,32,0.12);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--bark);
+    transition: all 0.2s;
+  }
+  .edit-mode-toggle:hover, .edit-mode-toggle.active { background: var(--gold); color: white; }
+  .edit-mode-toggle .toggle-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--bark); transition: background 0.2s;
+  }
+  .edit-mode-toggle.active .toggle-dot { background: white; }
+
+  .edit-mnemonic-area {
+    display: none;
+    margin-top: 0.5rem;
+  }
+  .edit-mnemonic-area.open { display: block; }
+  .mnemonic-textarea {
+    width: 100%;
+    min-height: 70px;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    resize: vertical;
+    outline: none;
+    color: #5a3e10;
+    background: #fffbf0;
+  }
+  .mnemonic-edit-actions {
+    display: flex; gap: 0.4rem; margin-top: 0.4rem;
+  }
+  .btn-save-mnemonic {
+    padding: 0.35rem 0.9rem;
+    background: var(--leaf); color: white;
+    border: none; border-radius: 6px;
+    cursor: pointer; font-size: 0.78rem; font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-reset-mnemonic {
+    padding: 0.35rem 0.9rem;
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--muted); border-radius: 6px;
+    cursor: pointer; font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .mnemonic-saved-badge {
+    font-size: 0.72rem; color: #27ae60; font-weight: 600;
+    opacity: 0; transition: opacity 0.4s;
+  }
+  .mnemonic-saved-badge.show { opacity: 1; }
+
+  /* REAL MAP PAGE (Leaflet) */
+  #leaflet-map {
+    height: 520px;
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .map-page-wrapper { max-width: 1300px; margin: 0 auto; padding: 2rem; }
+  .map-top-row { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start; }
+  @media(max-width:900px){ .map-top-row { grid-template-columns: 1fr; } }
+  .map-info-panel {
+    background: white; border-radius: 16px; padding: 1.5rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    max-height: 560px; overflow-y: auto;
+  }
+  .map-info-panel h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--forest); margin-bottom: 1rem; font-size: 1.1rem;
+  }
+  .map-state-pill {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem; font-weight: 600;
+    margin: 0.2rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    color: white;
+  }
+  .map-state-pill:hover { filter: brightness(1.15); transform: scale(1.05); }
+  .map-park-entry {
+    display: flex; align-items: flex-start; gap: 0.5rem;
+    padding: 0.45rem 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-size: 0.83rem; color: var(--forest);
+    cursor: pointer;
+  }
+  .map-park-entry:hover { color: var(--leaf); }
+  .map-park-entry:last-child { border-bottom: none; }
+  .park-marker-dot { color: var(--gold); font-size: 1rem; flex-shrink: 0; }
+
+  /* MAP QUIZ */
+  .map-quiz-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+  #mapQuizMap { height: 480px; border-radius: 12px; overflow: hidden; cursor: crosshair; }
+  .map-quiz-question {
+    background: white; border-radius: 12px; padding: 1.2rem 1.5rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    margin-bottom: 1rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem; color: var(--forest);
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .map-quiz-badge {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0.25rem 0.7rem; border-radius: 20px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    background: rgba(91,158,201,0.15); color: var(--sky); white-space: nowrap;
+  }
+  .map-quiz-feedback {
+    background: white; border-radius: 10px; padding: 1rem 1.2rem;
+    margin-top: 0.75rem;
+    display: none; font-size: 0.9rem;
+    border-left: 4px solid var(--leaf);
+  }
+  .map-quiz-feedback.correct { border-color: #27ae60; background: rgba(39,174,96,0.06); color: #1a7040; }
+  .map-quiz-feedback.wrong { border-color: var(--red); background: rgba(192,57,43,0.06); color: #8b1a1a; }
+  .mqz-next {
+    background: var(--forest); color: white; border: none;
+    padding: 0.75rem 1.8rem; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem; font-weight: 600;
+    cursor: pointer; margin-top: 0.75rem; display: none;
+  }
+  .mqz-next:hover { background: var(--leaf); }
+  .mqz-score { font-family: 'Space Mono', monospace; color: var(--gold); font-weight: 700; }
+  .map-quiz-options {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;
+  }
+  .mqz-option {
+    padding: 0.5rem 1.1rem; border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 8px; cursor: pointer; font-size: 0.88rem;
+    font-family: 'DM Sans', sans-serif; background: white;
+    transition: all 0.2s;
+  }
+  .mqz-option:hover:not(:disabled) { border-color: var(--leaf); }
+  .mqz-option.correct { border-color: #27ae60; background: rgba(39,174,96,0.1); color: #1a7040; }
+  .mqz-option.wrong { border-color: var(--red); background: rgba(192,57,43,0.08); color: var(--red); }
+  .mqz-option.reveal { border-color: #27ae60; }
+  .mqz-option:disabled { cursor: default; }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(232,160,32,0.6); }
+    70% { box-shadow: 0 0 0 12px rgba(232,160,32,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,160,32,0); }
+  }
+
+  /* WRONG PARKS HIGHLIGHT in Learn mode */
+  .park-wrong-flag {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    background: rgba(192,57,43,0.1);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 4px;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.72rem;
+    color: #8b1a1a;
+    font-weight: 600;
+    margin-left: auto;
+    flex-shrink: 0;
+    cursor: help;
+  }
+  .parks-list li.has-wrong { background: rgba(192,57,43,0.06); border-radius: 6px; }
+  .parks-list li.has-wrong .park-link-name { color: #8b1a1a; font-weight: 600; }
+  .wrong-parks-banner {
+    background: rgba(192,57,43,0.08);
+    border: 1px solid rgba(192,57,43,0.25);
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.78rem;
+    color: #8b1a1a;
+    margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  }
+  .clear-wrong-btn {
+    margin-left: auto;
+    background: transparent; border: 1px solid rgba(192,57,43,0.4);
+    border-radius: 4px; padding: 0.2rem 0.5rem;
+    color: #8b1a1a; cursor: pointer; font-size: 0.72rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .clear-wrong-btn:hover { background: rgba(192,57,43,0.1); }
+  .state-card.has-wrongs .card-header { position: relative; }
+  .state-card.has-wrongs .card-header::after {
+    content: '⚠️ Review needed';
+    position: absolute; right: 0.75rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.65rem; background: rgba(192,57,43,0.85);
+    color: white; padding: 0.15rem 0.5rem; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+
+  /* highlight search */
+  mark { background: rgba(232,160,32,0.35); border-radius: 2px; padding: 0 1px; }
+
+  /* map tooltip */
+  .map-dot {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 10;
+  }
+  .map-dot:hover { transform: scale(1.5); }
+
+  /* SVG India map styles */
+  .state-path {
+    stroke: white;
+    stroke-width: 0.5;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .state-path:hover { filter: brightness(1.2); }
+
+  /* Simplified map with clickable state divs */
+  .map-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .map-state-btn {
+    padding: 0.6rem 0.4rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+    color: white;
+    line-height: 1.3;
+  }
+  .map-state-btn:hover { transform: scale(1.05); box-shadow: 0 3px 12px rgba(0,0,0,0.2); }
+  .map-state-btn.selected { box-shadow: 0 0 0 3px var(--gold), 0 3px 12px rgba(0,0,0,0.2); }
+  .selected-state-info {
+    background: var(--sand);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-top: 1rem;
+  }
+  .selected-state-info h4 {
+    font-family: 'Playfair Display', serif;
+    color: var(--forest);
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+  }
+  .info-mnemonic {
+    background: white;
+    border-left: 3px solid var(--gold);
+    padding: 0.6rem 0.8rem;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.85rem;
+    color: #5a3e10;
+    font-style: italic;
+    margin-bottom: 0.75rem;
+  }
+  .info-parks { font-size: 0.83rem; }
+  .info-parks li { padding: 0.25rem 0; color: var(--forest); }
+
+  .quiz-hint {
+    background: rgba(91,158,201,0.12);
+    border: 1px solid rgba(91,158,201,0.3);
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    font-size: 0.82rem;
+    color: #2c5f7a;
+    margin-bottom: 1.2rem;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🌿 India's Wild Parks</div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showPage('learn')">📚 Learn</div>
+    <div class="nav-tab" onclick="showPage('map')">🗺️ Map</div>
+    <div class="nav-tab" onclick="showPage('quiz')">🧠 Quiz</div>
+    <div class="nav-tab" onclick="showPage('mapquiz')">📍 Map Quiz</div>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>National Parks of <span>India</span></h1>
+  <p>Master all parks with clever mnemonics · Test yourself with smart quizzes</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><span class="num">107</span><span class="label">National Parks</span></div>
+    <div class="hero-stat"><span class="num">28+</span><span class="label">States & UTs</span></div>
+    <div class="hero-stat"><span class="num">1936</span><span class="label">First Park Est.</span></div>
+  </div>
+</div>
+
+<!-- ===== LEARN PAGE ===== -->
+<div id="page-learn" class="page active">
+  <div class="learn-container">
+    <div class="learn-header">
+      <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search parks or states..." oninput="filterCards()">
+      <div class="filter-btns">
+        <button class="filter-btn active" onclick="setRegion('all',this)">All</button>
+        <button class="filter-btn" onclick="setRegion('north',this)">North</button>
+        <button class="filter-btn" onclick="setRegion('south',this)">South</button>
+        <button class="filter-btn" onclick="setRegion('east',this)">East</button>
+        <button class="filter-btn" onclick="setRegion('west',this)">West</button>
+        <button class="filter-btn" onclick="setRegion('ne',this)">North-East</button>
+        <button class="filter-btn" onclick="setRegion('islands',this)">Islands</button>
+      </div>
+      <button class="edit-mode-toggle" id="editModeBtn" onclick="toggleEditMode()">
+        <span class="toggle-dot"></span> ✏️ Edit Mnemonics
+      </button>
+    </div>
+    <div class="states-grid" id="statesGrid"></div>
+  </div>
+</div>
+
+<!-- ===== MAP PAGE ===== -->
+<div id="page-map" class="page">
+  <div class="map-page-wrapper">
+    <div class="map-top-row">
+      <div>
+        <div style="background:white;border-radius:16px;padding:1.2rem 1.5rem 0.5rem;box-shadow:0 2px 20px rgba(0,0,0,0.08);margin-bottom:0.75rem;">
+          <h3 style="font-family:'Playfair Display',serif;color:var(--forest);font-size:1.15rem;margin-bottom:0.5rem;">🗺️ National Parks of India — Live Map</h3>
+          <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;">Click any marker to see park details. Use the panel on the right to filter by state.</p>
+        </div>
+        <div id="leaflet-map"></div>
+      </div>
+      <div class="map-info-panel" id="mapInfoPanel">
+        <h3>All States</h3>
+        <div id="mapStatePills" style="margin-bottom:1rem;"></div>
+        <div id="mapParkList">
+          <p style="color:var(--muted);font-size:0.85rem;">Click a state pill or a map marker to see parks.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QUIZ PAGE ===== -->
+<div id="page-quiz" class="page">
+  <div class="quiz-container">
+    <div class="quiz-setup" id="quizSetup">
+      <h2>🧠 Quiz Yourself</h2>
+      <div class="setup-row">
+        <label>Question Type</label>
+        <div class="option-pills">
+          <button class="option-pill selected" data-group="qtype" data-val="mcq" onclick="selectPill(this)">MCQ (Multiple Choice)</button>
+          <button class="option-pill" data-group="qtype" data-val="fitb" onclick="selectPill(this)">Fill in the Blank</button>
+          <button class="option-pill" data-group="qtype" data-val="mixed" onclick="selectPill(this)">Mixed</button>
+        </div>
+      </div>
+      <div class="setup-row">
+        <label>Question Focus</label>
+        <div class="option-pills">
+          <button class="option-pill selected" data-group="qfocus" data-val="park" onclick="selectPill(this)">Given State → Name Park</button>
+          <button class="option-pill" data-group="qfocus" data-val="state" onclick="selectPill(this)">Given Park → Name State</button>
+          <button class="option-pill" data-group="qfocus" data-val="both" onclick="selectPill(this)">Both Mixed</button>
+        </div>
+      </div>
+      <div class="setup-row">
+        <label>Number of Questions</label>
+        <div class="option-pills">
+          <button class="option-pill" data-group="qcount" data-val="10" onclick="selectPill(this)">10</button>
+          <button class="option-pill selected" data-group="qcount" data-val="20" onclick="selectPill(this)">20</button>
+          <button class="option-pill" data-group="qcount" data-val="30" onclick="selectPill(this)">30</button>
+          <button class="option-pill" data-group="qcount" data-val="50" onclick="selectPill(this)">50</button>
+        </div>
+      </div>
+      <div class="setup-row">
+        <label>Region Filter</label>
+        <div class="option-pills" id="regionPills">
+          <button class="option-pill selected" data-group="qregion" data-val="all" onclick="selectPill(this)">All India</button>
+          <button class="option-pill" data-group="qregion" data-val="north" onclick="selectPill(this)">North</button>
+          <button class="option-pill" data-group="qregion" data-val="south" onclick="selectPill(this)">South</button>
+          <button class="option-pill" data-group="qregion" data-val="east" onclick="selectPill(this)">East</button>
+          <button class="option-pill" data-group="qregion" data-val="west" onclick="selectPill(this)">West</button>
+          <button class="option-pill" data-group="qregion" data-val="ne" onclick="selectPill(this)">North-East</button>
+        </div>
+      </div>
+      <button class="start-quiz-btn" onclick="startQuiz()">Start Quiz →</button>
+    </div>
+
+    <div class="quiz-active" id="quizActive">
+      <div class="quiz-meta">
+        <span id="qMeta">Question 1 of 20</span>
+        <span class="score-badge" id="scoreBadge">Score: 0</span>
+      </div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="progressFill"></div></div>
+      <div class="question-card" id="questionCard">
+        <div id="qTypeBadge" class="q-type-badge mcq">MCQ</div>
+        <div class="question-text" id="questionText"></div>
+        <div class="quiz-hint hidden" id="quizHint"></div>
+        <div id="answerArea"></div>
+        <div class="feedback-box" id="feedbackBox"></div>
+      </div>
+      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+    </div>
+
+    <div class="quiz-results" id="quizResults">
+      <div class="results-emoji" id="resultsEmoji">🏆</div>
+      <div class="results-title">Quiz Complete!</div>
+      <div class="results-score" id="resultsScore"></div>
+      <div class="results-msg" id="resultsMsg"></div>
+      <div class="results-actions">
+        <button class="result-btn primary" onclick="restartQuiz()">Try Again</button>
+        <button class="result-btn secondary" onclick="showPage('learn')">Study More</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAP QUIZ PAGE ===== -->
+<div id="page-mapquiz" class="page">
+  <div class="map-quiz-wrap">
+    <!-- Setup -->
+    <div id="mqzSetup" style="background:white;border-radius:16px;padding:2rem;box-shadow:0 2px 20px rgba(0,0,0,0.08);max-width:600px;margin:0 auto;">
+      <h2 style="font-family:'Playfair Display',serif;color:var(--forest);font-size:1.8rem;margin-bottom:1rem;">📍 Map Quiz</h2>
+      <p style="color:var(--muted);margin-bottom:1.5rem;font-size:0.92rem;">Test your knowledge by locating national parks on the real map of India!</p>
+      <div class="setup-row">
+        <label style="display:block;font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.75rem;">Quiz Mode</label>
+        <div class="option-pills">
+          <button class="option-pill selected" data-mqzgroup="mode" data-val="point" onclick="selectMqzPill(this)">🗺️ Identify the State</button>
+          <button class="option-pill" data-mqzgroup="mode" data-val="name" onclick="selectMqzPill(this)">🏷️ Name the Park</button>
+        </div>
+        <p style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem;" id="mqzModeDesc">You'll be told a park name → click the correct state on the map</p>
+      </div>
+      <div class="setup-row">
+        <label style="display:block;font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.75rem;">Number of Questions</label>
+        <div class="option-pills">
+          <button class="option-pill selected" data-mqzgroup="count" data-val="10" onclick="selectMqzPill(this)">10</button>
+          <button class="option-pill" data-mqzgroup="count" data-val="15" onclick="selectMqzPill(this)">15</button>
+          <button class="option-pill" data-mqzgroup="count" data-val="20" onclick="selectMqzPill(this)">20</button>
+        </div>
+      </div>
+      <button class="start-quiz-btn" onclick="startMapQuiz()">Start Map Quiz →</button>
+    </div>
+    <!-- Active Quiz -->
+    <div id="mqzActive" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+        <span id="mqzMeta" style="font-family:'Space Mono',monospace;font-size:0.82rem;color:var(--muted);"></span>
+        <span class="mqz-score" id="mqzScore">Score: 0</span>
+      </div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="mqzProgress"></div></div>
+      <div class="map-quiz-question" id="mqzQuestion">
+        <span class="map-quiz-badge" id="mqzBadge">Point the Park</span>
+        <span id="mqzQText">Loading...</span>
+      </div>
+      <!-- options for 'name' mode -->
+      <div class="map-quiz-options" id="mqzOptions" style="display:none;"></div>
+      <div id="mapQuizMap"></div>
+      <div class="map-quiz-feedback" id="mqzFeedback"></div>
+      <button class="mqz-next" id="mqzNext" onclick="nextMapQuestion()">Next →</button>
+    </div>
+    <!-- Results -->
+    <div id="mqzResults" style="display:none;background:white;border-radius:16px;padding:3rem 2rem;text-align:center;box-shadow:0 2px 20px rgba(0,0,0,0.08);">
+      <div class="results-emoji" id="mqzResultEmoji">🏆</div>
+      <div class="results-title" style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--forest);">Map Quiz Complete!</div>
+      <div class="results-score" id="mqzResultScore" style="font-family:'Space Mono',monospace;font-size:3rem;color:var(--gold);font-weight:700;margin:1rem 0;"></div>
+      <div class="results-msg" id="mqzResultMsg" style="color:var(--muted);margin-bottom:2rem;"></div>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <button class="result-btn primary" onclick="restartMapQuiz()">Try Again</button>
+        <button class="result-btn secondary" onclick="showPage('learn')">Study</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const statesData = [
+  {
+    id: 'jk', name: 'Jammu & Kashmir', icon: '🏔️', region: 'north',
+    mnemonic: 'Jammu ki Hemlata ne Kisht (kashti) par sawar ho kar Salim ko Daachigam station pe vida kiya, aur Kazi ne unhe jaate dekha.',
+    mnemonicBreakdown: 'Hemlata→Hemis | Kisht→Kishtwar | Salim→Salim Ali | Daachigam→Dachigam | Kazi→Kazinag',
+    parks: ['Salim Ali National Park','Kishtwar National Park','Dachigam National Park','Kazinag National Park']
+  },
+  {
+    id: 'ladakh', name: 'Ladakh', icon: '🏔️', region: 'north',
+    mnemonic: 'LADAKH has only ONE park — HEMIS. Remember: "Ladakh is HEMISpherically cold and high!"',
+    mnemonicBreakdown: 'Hemis = Largest NP in India by area',
+    parks: ['Hemis National Park']
+  },
+  {
+    id: 'hp', name: 'Himachal Pradesh', icon: '🏔️', region: 'north',
+    mnemonic: 'Himachal ke Inder ne Sim ko Pin se nikala aur Kheerganga mein fek diya, phir Great Himalaya dekha.',
+    mnemonicBreakdown: 'Inder→Inderkilla | Sim→Simbalbara | Pin→Pin Valley | Kheerganga→Kheerganga | Great Himalaya→Great Himalayan NP',
+    parks: ['Simbalbara National Park','Pin Valley National Park','Kheerganga National Park','Inderkilla National Park','Great Himalayan National Park']
+  },
+  {
+    id: 'haryana', name: 'Haryana', icon: '🌾', region: 'north',
+    mnemonic: 'Haryana ke Sultan Salman bhai bade Kalakar hain — Sultan aur Kalesar!',
+    mnemonicBreakdown: 'Sultan→Sultanpur NP | Kalakar/Kalesar→Kalesar NP',
+    parks: ['Sultanpur National Park','Kalesar National Park']
+  },
+  {
+    id: 'rajasthan', name: 'Rajasthan', icon: '🐆', region: 'west',
+    mnemonic: 'Sarita eats Banana (Ranthambore) and saw a lion in Desert of Mount Abu Park Rajasthan and Run due to fear — SARA RAN KE MUD DES.',
+    mnemonicBreakdown: 'Sariska | Ranthambore | Keoladeo | Mukundra | Desert NP',
+    parks: ['Sariska Tiger Reserve','Ranthambore National Park','Mukundra Hills National Park','Keoladeo National Park','Desert National Park']
+  },
+  {
+    id: 'gujarat', name: 'Gujarat', icon: '🦁', region: 'west',
+    mnemonic: 'Gujarat mein meri Black Van drive karte hue Marine beach par Gir gayi! (Black Van Marine Gir)',
+    mnemonicBreakdown: 'Black→Blackbuck NP Velavadar | Van→Vansda NP | Marine→Marine NP Gulf of Kutch | Gir→Gir Forest NP',
+    parks: ['Vansda National Park','Marine National Park, Gulf of Kutch','Gir Forest National Park','Blackbuck National Park, Velavadar']
+  },
+  {
+    id: 'up', name: 'Uttar Pradesh', icon: '🦌', region: 'north',
+    mnemonic: 'UP mein Dudheshwar mandir hai — DUDHWA single park, easy to remember!',
+    mnemonicBreakdown: 'Dudhwa = only NP in UP',
+    parks: ['Dudhwa National Park']
+  },
+  {
+    id: 'uttarakhand', name: 'Uttarakhand', icon: '🏔️', region: 'north',
+    mnemonic: 'UK ke Raja Ji se milne Govind aur Nanda Devi, Ganga Valley ki Gym mein Jim (Corbett) ke saath Flowers lene gaye.',
+    mnemonicBreakdown: 'Raja Ji→Rajaji NP | Govind→Govind Pashu Vihar | Nanda Devi→Nanda Devi NP | Gangotri→Gangotri NP | Gym→Valley of Flowers | Jim→Jim Corbett NP',
+    parks: ['Valley of Flowers National Park','Rajaji National Park','Nanda Devi National Park','Jim Corbett National Park','Govind Pashu Vihar National Park','Gangotri National Park']
+  },
+  {
+    id: 'mp', name: 'Madhya Pradesh', icon: '🐯', region: 'west',
+    mnemonic: 'Sanjay aur Madhav, apne bhai Bandhu Kanha se milne, Paanch Paise le kar, Paan khate hue, Saturday ko Van se Mandal Vihar (MP) gaye.',
+    mnemonicBreakdown: 'Sanjay→Sanjay NP | Madhav→Madhav NP | Bandhu→Bandhavgarh | Kanha→Kanha NP | Paanch Paise→Pench+Panna | Saturday→Satpura | Van→Van Vihar | Mandal→Mandla Plant Fossils | Dinosaur→Ghughua (Dinosaur Fossils) | Kuno→Kuno NP',
+    parks: ['Van Vihar National Park','Satpura National Park','Sanjay National Park','Pench National Park','Panna National Park','Mandla Plant Fossils National Park','Dinosaur Fossils (Ghughua) National Park','Madhav National Park','Kuno National Park','Kanha National Park','Bandhavgarh National Park']
+  },
+  {
+    id: 'maharashtra', name: 'Maharashtra', icon: '🐆', region: 'west',
+    mnemonic: 'Sanjay Chandan aur Gugamal ne Tadoba mein Navegaon ka Chandoli tour book kiya.',
+    mnemonicBreakdown: 'Sanjay→Sanjay Gandhi NP | Chandan→Chandoli NP | Gugamal→Gugamal NP | Tadoba→Tadoba NP | Navegaon→Navegaon NP | Pench→Pench (Jawaharlal Nehru) NP',
+    parks: ['Tadoba National Park','Sanjay Gandhi National Park','Pench (Jawaharlal Nehru) NP','Navegaon National Park','Gugamal National Park','Chandoli National Park']
+  },
+  {
+    id: 'goa', name: 'Goa', icon: '🏝️', region: 'west',
+    mnemonic: 'Goa mein Mahaveer singh ki AnMol kushti — GOA has just MOLLEM. Easy!',
+    mnemonicBreakdown: 'Mollem = only NP in Goa',
+    parks: ['Mollem National Park']
+  },
+  {
+    id: 'karnataka', name: 'Karnataka', icon: '🐘', region: 'south',
+    mnemonic: 'Bruce Banner (Hulk) ki Bandi ko Ansh Kundan Nagar se Karnataka le gaya aur wahi shift ho gaya.',
+    mnemonicBreakdown: 'Bruce Banner→Bandipur NP | Bandi→Bandipur | Ansh→Anshi NP | Kundan→Kudremukh | Nagar→Nagarhole | Bannerghatta→Bannerghatta NP',
+    parks: ['Nagarhole National Park','Kudremukh National Park','Bannerghatta National Park','Bandipur National Park','Anshi National Park']
+  },
+  {
+    id: 'kerala', name: 'Kerala', icon: '🌴', region: 'south',
+    mnemonic: 'Sholey ki Padmini aur Er. Ravi ka Silent Pyar, Anna ne Mithai aur Karela kha kar manjur kiya. (If name has SHOLA → it\'s Kerala!)',
+    mnemonicBreakdown: 'Silent→Silent Valley | Periyar→Periyar NP | Pambadum→Pambadum Shola | Mathikettan→Mathikettan Shola | Eravikulam→Eravikulam NP | Anamudi→Anamudi Shola NP',
+    parks: ['Silent Valley National Park','Periyar National Park','Pambadum Shola National Park','Mathikettan Shola National Park','Eravikulam National Park','Anamudi Shola National Park']
+  },
+  {
+    id: 'tn', name: 'Tamil Nadu', icon: '🦚', region: 'south',
+    mnemonic: 'Gullu Gunde ne Indira Gandhi ke Maruti ko Mud mein Dall Diya (TN). Gulf wale ne Guindy mein Mukthi maagi.',
+    mnemonicBreakdown: 'Mukurthi→Mukurthi NP | Mudumalai→Mudumalai NP | Indira Gandhi→Indira Gandhi WL Sanctuary (Annamalai) | Gulf→Gulf of Mannar Marine NP | Guindy→Guindy NP',
+    parks: ['Mukurthi National Park','Mudumalai National Park','Indira Gandhi Wildlife Sanctuary and National Park','Gulf of Mannar Marine National Park','Guindy National Park']
+  },
+  {
+    id: 'ap', name: 'Andhra Pradesh', icon: '🦌', region: 'south',
+    mnemonic: 'Rajiv Gandhi went to Venkateswara temple in AP & met his friend Papi.',
+    mnemonicBreakdown: 'Rajiv Gandhi→Rajiv Gandhi NP (Rameswaram) | Venkateswara→Sri Venkateswara NP | Papi→Papikonda NP',
+    parks: ['Sri Venkateswara National Park','Rajiv Gandhi National Park (Rameswaram)','Papikonda National Park']
+  },
+  {
+    id: 'telangana', name: 'Telangana', icon: '🦌', region: 'south',
+    mnemonic: 'Hari aur Brahmanand ne Chicken (Mrugavani) khaya Telangana mein.',
+    mnemonicBreakdown: 'Hari→Mahaveer Harina Vanasthali | Brahmanand→Kasu Brahmananda Reddy NP | Mrugavani→Mrugavani NP',
+    parks: ['Mrugavani National Park','Mahaveer Harina Vanasthali National Park','Vanasthali National Park','Kasu Brahmananda Reddy National Park']
+  },
+  {
+    id: 'bihar', name: 'Bihar', icon: '📖', region: 'east',
+    mnemonic: 'Bihar mein Valmiki ji ne Ramayan ki rachna ki — VALMIKI is the only park!',
+    mnemonicBreakdown: 'Valmiki NP = only NP in Bihar',
+    parks: ['Valmiki National Park']
+  },
+  {
+    id: 'jharkhand', name: 'Jharkhand', icon: '🌲', region: 'east',
+    mnemonic: 'Jhansi Ki rani ka Betla (Battle)la — BETLA is Jharkhand\'s only park!',
+    mnemonicBreakdown: 'Betla NP = only NP in Jharkhand (formerly Palamau NP)',
+    parks: ['Betla National Park']
+  },
+  {
+    id: 'odisha', name: 'Odisha', icon: '🐊', region: 'east',
+    mnemonic: 'Odisha Bhitar (Inside) se Simpal (Simple) hain — Bhitarkanika aur Simlipal.',
+    mnemonicBreakdown: 'Bhitar→Bhitarkanika NP | Simpal→Simlipal NP',
+    parks: ['Simlipal National Park','Bhitarkanika National Park']
+  },
+  {
+    id: 'wb', name: 'West Bengal', icon: '🐅', region: 'east',
+    mnemonic: 'West Bengal Ki Jalpari Neora Single hain aur badi hi Sunder aur Gori Boxer hain.',
+    mnemonicBreakdown: 'Jalpari→Jaldapara NP | Neora→Neora Valley NP | Single→Singalila NP | Sunder→Sundarbans NP | Gori→Gorumara NP | Boxer→Buxa Tiger Reserve',
+    parks: ['Sundarbans National Park','Singalila National Park','Neora Valley National Park','Jaldapara National Park','Gorumara National Park']
+  },
+  {
+    id: 'chhattisgarh', name: 'Chhattisgarh', icon: '🌿', region: 'east',
+    mnemonic: 'Chhattisgarh ki Indra weekly Guru kul ghumne Kangra Ghati (valley) jaati hain.',
+    mnemonicBreakdown: 'Indra→Indravati NP | Guru→Guru Ghasidas (Sanjay) NP | Kangra Ghati→Kanger Ghati NP',
+    parks: ['Kanger Ghati National Park','Indravati National Park','Guru Ghasidas (Sanjay) National Park']
+  },
+  {
+    id: 'assam', name: 'Assam', icon: '🦏', region: 'ne',
+    mnemonic: 'Manas aur Dabbu (Dibru) ne Orange khaya aur Kajrare Nam ka song Nameri Orang se sunaya — MANAS DI-BRU KAZI NAMERI ORANG + RAIMONA + DEHING PATKAI.',
+    mnemonicBreakdown: 'Manas→Manas NP | Dibru→Dibru-Saikhowa NP | Kazi→Kaziranga NP | Nameri→Nameri NP | Orang→Orang NP | Raimona→Raimona NP | Dehing→Dehing Patkai NP',
+    parks: ['Orang National Park','Nameri National Park','Manas National Park','Kaziranga National Park','Dibru-Saikhowa National Park','Dehing Patkai National Park','Raimona National Park']
+  },
+  {
+    id: 'arunachal', name: 'Arunachal Pradesh', icon: '🦅', region: 'ne',
+    mnemonic: 'AruNam was walking in the Mouli Gardens — Namdapha aur Mouling!',
+    mnemonicBreakdown: 'Aru+Nam→Namdapha NP | Mouli→Mouling NP',
+    parks: ['Namdapha National Park','Mouling National Park']
+  },
+  {
+    id: 'meghalaya', name: 'Meghalaya', icon: '🌧️', region: 'ne',
+    mnemonic: 'Balram of Meghalaya went to the Nokrek Ridge to buy a Balphakram lamb.',
+    mnemonicBreakdown: 'Nokrek→Nokrek National Park | Balphakram→Balphakram National Park',
+    parks: ['Nokrek National Park','Balphakram National Park']
+  },
+  {
+    id: 'sikkim', name: 'Sikkim', icon: '🏔️', region: 'ne',
+    mnemonic: 'Khanchan from Sikkim went to buy a new Sim — KHANGCHENDZONGA is Sikkim\'s only park!',
+    mnemonicBreakdown: 'Khangchendzonga = only NP in Sikkim; UNESCO World Heritage Site',
+    parks: ['Khangchendzonga National Park']
+  },
+  {
+    id: 'nagaland', name: 'Nagaland', icon: '🦋', region: 'ne',
+    mnemonic: 'Nagaland has NTANGki — one park only: NTANGKI.',
+    mnemonicBreakdown: 'Ntangki NP = only NP in Nagaland',
+    parks: ['Ntangki National Park']
+  },
+  {
+    id: 'manipur', name: 'Manipur', icon: '🦌', region: 'ne',
+    mnemonic: 'Manipur ka bahadur Sipahi Cable wala nikla — Sirohi aur Keibul Lamjao!',
+    mnemonicBreakdown: 'Si→Sirohi NP | Cable/Keibul→Keibul Lamjao NP (world\'s only floating NP!)',
+    parks: ['Sirohi National Park','Keibul Lamjao National Park']
+  },
+  {
+    id: 'tripura', name: 'Tripura', icon: '🐆', region: 'ne',
+    mnemonic: 'Leopard owned by Bison residing in Tripura — Clouded Leopard aur Bison (Rajbari)!',
+    mnemonicBreakdown: 'Clouded Leopard→Clouded Leopard NP | Bison→Bison (Rajbari) NP',
+    parks: ['Clouded Leopard National Park','Bison (Rajbari) National Park']
+  },
+  {
+    id: 'mizoram', name: 'Mizoram', icon: '🦋', region: 'ne',
+    mnemonic: 'Mizoram mein Phawngpui Blue Mountain aur Murlen — Phawnpui Blue Mountain NP & Murlen NP.',
+    mnemonicBreakdown: 'Phawngpui→Phawngpui Blue Mountain NP (highest peak in Mizoram) | Murlen→Murlen NP',
+    parks: ['Phawngpui Blue Mountain National Park','Murlen National Park']
+  },
+  {
+    id: 'andaman', name: 'Andaman & Nicobar', icon: '🏝️', region: 'islands',
+    mnemonic: 'Mount Harry takes Sad Rani from Jhansi to Gandhi Gola Camp, from North South of Middle to make her happy.',
+    mnemonicBreakdown: 'Mount Harriet NP | Saddle Peak NP | Rani Jhansi Marine NP | Mahatma Gandhi Marine NP | Galathea NP | Campbell Bay NP | North/South/Middle Button Island NPs',
+    parks: ['South Button Island National Park','Saddle Peak National Park','Rani Jhansi Marine National Park','North Button Island National Park','Mount Harriet National Park','Middle Button Island National Park','Mahatma Gandhi Marine National Park','Galathea National Park','Campbell Bay National Park']
+  }
+];
+
+const regionMap = {
+  'north': ['jk','ladakh','hp','haryana','up','uttarakhand'],
+  'south': ['karnataka','kerala','tn','ap','telangana'],
+  'east': ['bihar','jharkhand','odisha','wb','chhattisgarh'],
+  'west': ['rajasthan','gujarat','mp','maharashtra','goa'],
+  'ne': ['assam','arunachal','meghalaya','sikkim','nagaland','manipur','tripura','mizoram'],
+  'islands': ['andaman']
+};
+
+const stateColors = [
+  '#2d6a4f','#40916c','#52b788','#1b4332','#081c15',
+  '#6a4c93','#8338ec','#3a86ff','#06d6a0','#118ab2',
+  '#ef476f','#ffd166','#06d6a0','#073b4c','#264653',
+  '#2a9d8f','#e9c46a','#f4a261','#e76f51','#023e8a',
+  '#0077b6','#0096c7','#00b4d8','#48cae4','#90e0ef',
+  '#d62828','#457b9d','#1d3557','#606c38','#283618'
+];
+
+// ===== EDIT MODE =====
+let editModeOn = false;
+// Load custom mnemonics from localStorage
+function loadCustomMnemonics() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('customMnemonics') || '{}');
+    statesData.forEach(s => {
+      if (saved[s.id]) { s._origMnemonic = s._origMnemonic || s.mnemonic; s.mnemonic = saved[s.id]; }
+      else { s._origMnemonic = s._origMnemonic || s.mnemonic; }
+    });
+  } catch(e){}
+}
+
+// ===== WRONG PARKS PERSISTENCE =====
+let wrongParksSet = new Set();
+function loadWrongParks() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('wrongParks') || '[]');
+    wrongParksSet = new Set(saved);
+  } catch(e){ wrongParksSet = new Set(); }
+}
+function saveWrongPark(parkName) {
+  wrongParksSet.add(parkName);
+  try { localStorage.setItem('wrongParks', JSON.stringify([...wrongParksSet])); } catch(e){}
+}
+function clearWrongPark(parkName) {
+  wrongParksSet.delete(parkName);
+  try { localStorage.setItem('wrongParks', JSON.stringify([...wrongParksSet])); } catch(e){}
+}
+function clearAllWrongParks() {
+  wrongParksSet.clear();
+  try { localStorage.setItem('wrongParks', '[]'); } catch(e){}
+  renderLearn(currentRegion, document.getElementById('searchBox').value);
+}
+function saveMnemonic(stateId, val) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('customMnemonics') || '{}');
+    saved[stateId] = val;
+    localStorage.setItem('customMnemonics', JSON.stringify(saved));
+  } catch(e){}
+}
+function resetMnemonic(stateId) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('customMnemonics') || '{}');
+    delete saved[stateId];
+    localStorage.setItem('customMnemonics', JSON.stringify(saved));
+    const s = statesData.find(x => x.id === stateId);
+    if (s && s._origMnemonic) s.mnemonic = s._origMnemonic;
+  } catch(e){}
+}
+function toggleEditMode() {
+  editModeOn = !editModeOn;
+  const btn = document.getElementById('editModeBtn');
+  btn.classList.toggle('active', editModeOn);
+  btn.querySelector('.toggle-dot').style.background = editModeOn ? 'white' : 'var(--bark)';
+  renderLearn(currentRegion, document.getElementById('searchBox').value);
+}
+
+// ===== RENDER LEARN PAGE =====
+function renderLearn(filterRegion = 'all', searchTerm = '') {
+  const grid = document.getElementById('statesGrid');
+  grid.innerHTML = '';
+  const term = searchTerm.toLowerCase();
+
+  // Count total wrong parks for banner
+  let totalWrong = wrongParksSet.size;
+  if (totalWrong > 0 && filterRegion === 'all' && !term) {
+    const banner = document.createElement('div');
+    banner.className = 'wrong-parks-banner';
+    banner.style.gridColumn = '1 / -1';
+    banner.innerHTML = `⚠️ <strong>${totalWrong} park${totalWrong>1?'s':''}</strong> marked for review from your quiz attempts.
+      <button class="clear-wrong-btn" onclick="clearAllWrongParks()">✕ Clear All</button>`;
+    grid.appendChild(banner);
+  }
+  
+  statesData.forEach((state, idx) => {
+    if (filterRegion !== 'all' && !regionMap[filterRegion]?.includes(state.id)) return;
+    if (term) {
+      const matches = state.name.toLowerCase().includes(term) ||
+                      state.parks.some(p => p.toLowerCase().includes(term));
+      if (!matches) return;
+    }
+    
+    const card = document.createElement('div');
+    const stateHasWrong = state.parks.some(p => wrongParksSet.has(p));
+    card.className = `state-card${stateHasWrong ? ' has-wrongs' : ''}`;
+    card.dataset.stateId = state.id;
+    card.dataset.region = state.region;
+    
+    const parkListItems = state.parks.map(p => {
+      const isWrong = wrongParksSet.has(p);
+      const highlighted = term ? p.replace(new RegExp(`(${term})`, 'gi'), '<mark>$1</mark>') : p;
+      return `<li class="${isWrong ? 'has-wrong' : ''}">
+        <span class="park-link-name">${highlighted}</span>
+        ${isWrong ? `<span class="park-wrong-flag" title="Missed in quiz — click to clear" onclick="clearWrongAndRefresh('${p.replace(/'/g,"\\'")}')" >❌ Review</span>` : ''}
+      </li>`;
+    }).join('');
+    
+    const stateName = term ? state.name.replace(new RegExp(`(${term})`, 'gi'), '<mark>$1</mark>') : state.name;
+    
+    const editSection = editModeOn ? `
+      <div style="margin-top:0.5rem;">
+        <button class="btn-reset-mnemonic" style="font-size:0.72rem;padding:0.25rem 0.6rem;" onclick="toggleEditArea('${state.id}')">✏️ Edit Mnemonic</button>
+        <span class="mnemonic-saved-badge" id="saved-${state.id}">✓ Saved!</span>
+        <div class="edit-mnemonic-area" id="editArea-${state.id}">
+          <textarea class="mnemonic-textarea" id="mnemonicTA-${state.id}">${state.mnemonic}</textarea>
+          <div class="mnemonic-edit-actions">
+            <button class="btn-save-mnemonic" onclick="applyMnemonic('${state.id}')">💾 Save</button>
+            <button class="btn-reset-mnemonic" onclick="applyReset('${state.id}')">↩ Reset to Default</button>
+          </div>
+        </div>
+      </div>` : '';
+    
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="state-icon">${state.icon}</div>
+        <div class="state-name">${stateName}</div>
+        <div class="park-count">${state.parks.length} park${state.parks.length > 1 ? 's' : ''}</div>
+      </div>
+      <div class="card-body">
+        <div class="mnemonic-box">
+          <div class="mnemonic-label">💡 Mnemonic</div>
+          <div class="mnemonic-text" id="mnemonicText-${state.id}">${state.mnemonic}</div>
+          ${state.mnemonicBreakdown ? `<div style="margin-top:0.5rem;font-size:0.78rem;color:#8b6914;font-style:normal;">${state.mnemonicBreakdown}</div>` : ''}
+          ${editSection}
+        </div>
+        <ul class="parks-list">${parkListItems}</ul>
+      </div>`;
+    grid.appendChild(card);
+  });
+  
+  if (!grid.children.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);">No results found. Try a different search.</div>';
+  }
+}
+
+function clearWrongAndRefresh(parkName) {
+  clearWrongPark(parkName);
+  renderLearn(currentRegion, document.getElementById('searchBox').value);
+}
+
+function toggleEditArea(id) {
+  const area = document.getElementById(`editArea-${id}`);
+  area.classList.toggle('open');
+  if (area.classList.contains('open')) {
+    const s = statesData.find(x => x.id === id);
+    document.getElementById(`mnemonicTA-${id}`).value = s.mnemonic;
+    document.getElementById(`mnemonicTA-${id}`).focus();
+  }
+}
+function applyMnemonic(id) {
+  const val = document.getElementById(`mnemonicTA-${id}`).value.trim();
+  if (!val) return;
+  const s = statesData.find(x => x.id === id);
+  s._origMnemonic = s._origMnemonic || s.mnemonic;
+  s.mnemonic = val;
+  saveMnemonic(id, val);
+  const el = document.getElementById(`mnemonicText-${id}`);
+  if (el) el.textContent = val;
+  document.getElementById(`editArea-${id}`).classList.remove('open');
+  const badge = document.getElementById(`saved-${id}`);
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 2000);
+}
+function applyReset(id) {
+  resetMnemonic(id);
+  const s = statesData.find(x => x.id === id);
+  document.getElementById(`mnemonicTA-${id}`).value = s.mnemonic;
+  document.getElementById(`mnemonicText-${id}`).textContent = s.mnemonic;
+  document.getElementById(`editArea-${id}`).classList.remove('open');
+}
+
+let currentRegion = 'all';
+function setRegion(region, btn) {
+  currentRegion = region;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLearn(region, document.getElementById('searchBox').value);
+}
+function filterCards() {
+  renderLearn(currentRegion, document.getElementById('searchBox').value);
+}
+
+// ===== PARK COORDINATES (lat, lng for each park) =====
+const parkCoords = {
+  // J&K
+  'Salim Ali National Park': [34.08, 74.82],
+  'Kishtwar National Park': [33.42, 75.90],
+  'Dachigam National Park': [34.13, 74.97],
+  'Kazinag National Park': [34.25, 74.00],
+  // Ladakh
+  'Hemis National Park': [33.82, 77.70],
+  // Himachal Pradesh
+  'Simbalbara National Park': [30.53, 77.55],
+  'Pin Valley National Park': [31.95, 77.88],
+  'Kheerganga National Park': [32.05, 77.32],
+  'Inderkilla National Park': [31.97, 77.10],
+  'Great Himalayan National Park': [31.75, 77.60],
+  // Haryana
+  'Sultanpur National Park': [28.43, 76.89],
+  'Kalesar National Park': [30.37, 77.53],
+  // UP
+  'Dudhwa National Park': [28.48, 80.68],
+  // Uttarakhand
+  'Valley of Flowers National Park': [30.72, 79.61],
+  'Rajaji National Park': [29.92, 78.22],
+  'Nanda Devi National Park': [30.72, 79.73],
+  'Jim Corbett National Park': [29.53, 78.77],
+  'Govind Pashu Vihar National Park': [31.10, 78.17],
+  'Gangotri National Park': [30.93, 79.07],
+  // Rajasthan
+  'Sariska Tiger Reserve': [27.37, 76.37],
+  'Ranthambore National Park': [26.02, 76.50],
+  'Mukundra Hills National Park': [24.72, 75.97],
+  'Keoladeo National Park': [27.17, 77.52],
+  'Desert National Park': [27.00, 71.83],
+  // Gujarat
+  'Vansda National Park': [20.75, 73.42],
+  'Marine National Park, Gulf of Kutch': [22.58, 69.58],
+  'Gir Forest National Park': [21.13, 70.80],
+  'Blackbuck National Park, Velavadar': [22.02, 72.18],
+  // MP
+  'Van Vihar National Park': [23.24, 77.40],
+  'Satpura National Park': [22.52, 78.22],
+  'Sanjay National Park': [23.95, 82.80],
+  'Pench National Park': [21.70, 79.32],
+  'Panna National Park': [24.72, 80.07],
+  'Mandla Plant Fossils National Park': [22.68, 80.42],
+  'Dinosaur Fossils (Ghughua) National Park': [22.92, 81.05],
+  'Madhav National Park': [25.47, 77.55],
+  'Kuno National Park': [26.02, 77.22],
+  'Kanha National Park': [22.33, 80.62],
+  'Bandhavgarh National Park': [23.72, 81.03],
+  // Maharashtra
+  'Tadoba National Park': [20.23, 79.33],
+  'Sanjay Gandhi National Park': [19.22, 72.92],
+  'Pench (Jawaharlal Nehru) NP': [21.48, 79.23],
+  'Navegaon National Park': [20.97, 79.83],
+  'Gugamal National Park': [21.57, 76.93],
+  'Chandoli National Park': [17.05, 73.78],
+  // Goa
+  'Mollem National Park': [15.42, 74.30],
+  // Karnataka
+  'Nagarhole National Park': [12.05, 76.12],
+  'Kudremukh National Park': [13.22, 75.18],
+  'Bannerghatta National Park': [12.80, 77.58],
+  'Bandipur National Park': [11.67, 76.63],
+  'Anshi National Park': [14.98, 74.37],
+  // Kerala
+  'Silent Valley National Park': [11.08, 76.42],
+  'Periyar National Park': [9.47, 77.18],
+  'Pambadum Shola National Park': [10.08, 77.10],
+  'Mathikettan Shola National Park': [9.72, 77.10],
+  'Eravikulam National Park': [10.18, 77.08],
+  'Anamudi Shola National Park': [10.10, 77.12],
+  // Tamil Nadu
+  'Mukurthi National Park': [11.27, 76.55],
+  'Mudumalai National Park': [11.57, 76.63],
+  'Indira Gandhi Wildlife Sanctuary and National Park': [10.32, 77.12],
+  'Gulf of Mannar Marine National Park': [9.17, 79.17],
+  'Guindy National Park': [13.01, 80.24],
+  // AP
+  'Sri Venkateswara National Park': [13.68, 79.35],
+  'Rajiv Gandhi National Park (Rameswaram)': [9.28, 79.32],
+  'Papikonda National Park': [17.42, 81.70],
+  // Telangana
+  'Mrugavani National Park': [17.33, 78.33],
+  'Mahaveer Harina Vanasthali National Park': [17.32, 78.38],
+  'Vanasthali National Park': [17.35, 78.40],
+  'Kasu Brahmananda Reddy National Park': [17.42, 78.45],
+  // Bihar
+  'Valmiki National Park': [27.57, 84.02],
+  // Jharkhand
+  'Betla National Park': [23.72, 84.08],
+  // Odisha
+  'Simlipal National Park': [21.83, 86.55],
+  'Bhitarkanika National Park': [20.72, 86.88],
+  // West Bengal
+  'Sundarbans National Park': [21.95, 88.87],
+  'Singalila National Park': [27.07, 88.00],
+  'Neora Valley National Park': [27.08, 88.75],
+  'Jaldapara National Park': [26.70, 89.43],
+  'Gorumara National Park': [26.72, 88.80],
+  // Chhattisgarh
+  'Kanger Ghati National Park': [19.03, 81.97],
+  'Indravati National Park': [19.05, 80.55],
+  'Guru Ghasidas (Sanjay) National Park': [23.52, 82.60],
+  // Assam
+  'Orang National Park': [26.55, 92.27],
+  'Nameri National Park': [26.93, 92.80],
+  'Manas National Park': [26.72, 90.98],
+  'Kaziranga National Park': [26.58, 93.38],
+  'Dibru-Saikhowa National Park': [27.72, 95.22],
+  'Dehing Patkai National Park': [27.38, 95.88],
+  'Raimona National Park': [26.72, 89.85],
+  // Arunachal Pradesh
+  'Namdapha National Park': [27.55, 96.38],
+  'Mouling National Park': [28.47, 95.02],
+  // Meghalaya
+  'Nokrek National Park': [25.47, 90.42],
+  'Balphakram National Park': [25.17, 90.72],
+  // Sikkim
+  'Khangchendzonga National Park': [27.60, 88.15],
+  // Nagaland
+  'Ntangki National Park': [26.07, 93.50],
+  // Manipur
+  'Sirohi National Park': [25.13, 94.20],
+  'Keibul Lamjao National Park': [24.57, 93.90],
+  // Tripura
+  'Clouded Leopard National Park': [23.72, 91.43],
+  'Bison (Rajbari) National Park': [23.55, 91.35],
+  // Mizoram
+  'Phawngpui Blue Mountain National Park': [22.48, 92.92],
+  'Murlen National Park': [23.15, 93.35],
+  // Andaman & Nicobar
+  'South Button Island National Park': [12.53, 92.98],
+  'Saddle Peak National Park': [13.12, 92.98],
+  'Rani Jhansi Marine National Park': [13.37, 92.97],
+  'North Button Island National Park': [12.65, 92.98],
+  'Mount Harriet National Park': [11.63, 92.75],
+  'Middle Button Island National Park': [12.60, 92.98],
+  'Mahatma Gandhi Marine National Park': [11.55, 92.68],
+  'Galathea National Park': [7.05, 93.90],
+  'Campbell Bay National Park': [7.00, 93.93],
+};
+
+// ===== RENDER MAP PAGE (Leaflet) =====
+let leafletMap = null;
+let leafletMarkers = [];
+let activeStateFilter = null;
+
+function renderMap() {
+  // Render state pills
+  const pillsEl = document.getElementById('mapStatePills');
+  if (!pillsEl) return;
+  pillsEl.innerHTML = '';
+  statesData.forEach((state, idx) => {
+    const color = stateColors[idx % stateColors.length];
+    const pill = document.createElement('span');
+    pill.className = 'map-state-pill';
+    pill.style.background = color;
+    pill.textContent = `${state.icon} ${state.name.split(' ')[0]}`;
+    pill.title = state.name;
+    pill.onclick = () => filterMapByState(state, pill, color);
+    pillsEl.appendChild(pill);
+  });
+}
+
+function initLeafletMap() {
+  if (leafletMap) return;
+  leafletMap = L.map('leaflet-map', {
+    center: [22.5, 82.5],
+    zoom: 5,
+    minZoom: 4,
+    maxZoom: 12,
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 18,
+  }).addTo(leafletMap);
+  addAllMarkers();
+}
+
+function addAllMarkers() {
+  leafletMarkers.forEach(m => m.remove());
+  leafletMarkers = [];
+  statesData.forEach((state, idx) => {
+    const color = stateColors[idx % stateColors.length];
+    state.parks.forEach(park => {
+      const coords = parkCoords[park];
+      if (!coords) return;
+      const icon = L.divIcon({
+        html: `<div style="width:10px;height:10px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>`,
+        className: '',
+        iconSize: [10, 10],
+        iconAnchor: [5, 5],
+      });
+      const marker = L.marker(coords, { icon, park, state: state.name, stateId: state.id, stateColor: color });
+      marker.bindPopup(`
+        <div style="font-family:'DM Sans',sans-serif;min-width:180px;">
+          <div style="font-weight:700;color:#1a3a2a;font-size:0.95rem;margin-bottom:0.3rem;">${park}</div>
+          <div style="font-size:0.8rem;color:#6b7a6b;">${state.icon} ${state.name}</div>
+        </div>`);
+      marker.on('click', () => showMapParkInfo(state, park));
+      marker.addTo(leafletMap);
+      leafletMarkers.push(marker);
+    });
+  });
+}
+
+function filterMapByState(state, pill, color) {
+  // Toggle
+  if (activeStateFilter === state.id) {
+    activeStateFilter = null;
+    addAllMarkers();
+    document.getElementById('mapParkList').innerHTML = '<p style="color:var(--muted);font-size:0.85rem;">Click a state pill or a map marker to see parks.</p>';
+    document.querySelectorAll('.map-state-pill').forEach(p => p.style.opacity = '1');
+    leafletMap.setView([22.5, 82.5], 5);
+    return;
+  }
+  activeStateFilter = state.id;
+  document.querySelectorAll('.map-state-pill').forEach(p => p.style.opacity = '0.4');
+  pill.style.opacity = '1';
+  // Show only this state's parks
+  leafletMarkers.forEach(m => m.remove());
+  leafletMarkers = [];
+  const bounds = [];
+  state.parks.forEach(park => {
+    const coords = parkCoords[park];
+    if (!coords) return;
+    bounds.push(coords);
+    const icon = L.divIcon({
+      html: `<div style="width:14px;height:14px;background:${color};border:2.5px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>`,
+      className: '', iconSize: [14,14], iconAnchor: [7,7],
+    });
+    const marker = L.marker(coords, { icon });
+    marker.bindPopup(`<div style="font-family:'DM Sans',sans-serif;"><div style="font-weight:700;color:#1a3a2a;">${park}</div><div style="font-size:0.8rem;color:#6b7a6b;">${state.icon} ${state.name}</div></div>`);
+    marker.addTo(leafletMap);
+    leafletMarkers.push(marker);
+  });
+  if (bounds.length > 0) leafletMap.fitBounds(bounds, { padding: [40, 40] });
+  showMapParkInfo(state, null);
+}
+
+function showMapParkInfo(state, highlightPark) {
+  const panel = document.getElementById('mapParkList');
+  panel.innerHTML = `
+    <div style="font-family:'Playfair Display',serif;font-weight:700;color:var(--forest);font-size:1rem;margin-bottom:0.4rem;">${state.icon} ${state.name}</div>
+    <div style="background:#fffbf0;border-left:3px solid var(--gold);padding:0.5rem 0.7rem;border-radius:0 6px 6px 0;font-size:0.78rem;color:#5a3e10;font-style:italic;margin-bottom:0.75rem;">${state.mnemonic.substring(0,160)}${state.mnemonic.length>160?'…':''}</div>
+    ${state.parks.map(p => `<div class="map-park-entry" style="${p===highlightPark?'background:rgba(232,160,32,0.12);border-radius:6px;':''}">
+      <span class="park-marker-dot">📍</span><span>${p}</span>
+    </div>`).join('')}`;
+}
+
+// ===== QUIZ =====
+let quizSettings = { qtype: 'mcq', qfocus: 'park', qcount: 20, qregion: 'all' };
+let quizQuestions = [];
+let quizIdx = 0;
+let quizScore = 0;
+let answered = false;
+
+function selectPill(btn) {
+  const group = btn.dataset.group;
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  quizSettings[group.replace('q','')] = btn.dataset.val;
+  // fix key names
+  if(group === 'qtype') quizSettings.qtype = btn.dataset.val;
+  if(group === 'qfocus') quizSettings.qfocus = btn.dataset.val;
+  if(group === 'qcount') quizSettings.qcount = parseInt(btn.dataset.val);
+  if(group === 'qregion') quizSettings.qregion = btn.dataset.val;
+}
+
+function getFilteredStates() {
+  const region = quizSettings.qregion;
+  if (region === 'all') return statesData;
+  return statesData.filter(s => regionMap[region]?.includes(s.id));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function generateQuestions() {
+  const states = getFilteredStates();
+  const allParks = states.flatMap(s => s.parks.map(p => ({park: p, state: s.name, mnemonic: s.mnemonic})));
+  
+  if (allParks.length < 4) {
+    alert('Not enough parks in selected region for a quiz. Please select more regions.');
+    return false;
+  }
+  
+  const pool = shuffle(allParks);
+  const count = Math.min(quizSettings.qcount, pool.length);
+  const selected = pool.slice(0, count);
+  
+  quizQuestions = selected.map(item => {
+    const focus = quizSettings.qfocus === 'both'
+      ? (Math.random() > 0.5 ? 'park' : 'state')
+      : quizSettings.qfocus;
+    
+    const qtype = quizSettings.qtype === 'mixed'
+      ? (Math.random() > 0.5 ? 'mcq' : 'fitb')
+      : quizSettings.qtype;
+    
+    let questionText, correctAnswer, wrongAnswers;
+    
+    if (focus === 'park') {
+      // Given state, name a park
+      const stateParks = states.find(s => s.name === item.state)?.parks || [item.park];
+      questionText = `Which of the following is a national park in <em>${item.state}</em>?`;
+      correctAnswer = item.park;
+      const otherParks = allParks.filter(p => p.state !== item.state).map(p => p.park);
+      wrongAnswers = shuffle(otherParks).slice(0, 3);
+    } else {
+      // Given park, name state
+      questionText = `<em>${item.park}</em> is located in which state/UT of India?`;
+      correctAnswer = item.state;
+      const otherStates = [...new Set(allParks.filter(p => p.park !== item.park).map(p => p.state))];
+      wrongAnswers = shuffle(otherStates).slice(0, 3);
+    }
+    
+    return { questionText, correctAnswer, wrongAnswers, qtype, mnemonic: item.mnemonic, focus };
+  });
+  
+  return true;
+}
+
+function startQuiz() {
+  if (!generateQuestions()) return;
+  quizIdx = 0;
+  quizScore = 0;
+  answered = false;
+  
+  document.getElementById('quizSetup').style.display = 'none';
+  document.getElementById('quizActive').style.display = 'block';
+  document.getElementById('quizResults').style.display = 'none';
+  
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = quizQuestions[quizIdx];
+  const total = quizQuestions.length;
+  answered = false;
+  
+  document.getElementById('qMeta').textContent = `Question ${quizIdx+1} of ${total}`;
+  document.getElementById('scoreBadge').textContent = `Score: ${quizScore}`;
+  document.getElementById('progressFill').style.width = `${(quizIdx/total)*100}%`;
+  
+  const badge = document.getElementById('qTypeBadge');
+  badge.textContent = q.qtype === 'mcq' ? 'Multiple Choice' : 'Fill in the Blank';
+  badge.className = `q-type-badge ${q.qtype}`;
+  
+  document.getElementById('questionText').innerHTML = q.questionText;
+  
+  const hint = document.getElementById('quizHint');
+  hint.classList.add('hidden');
+  
+  const feedback = document.getElementById('feedbackBox');
+  feedback.style.display = 'none';
+  feedback.className = 'feedback-box';
+  
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = 'none';
+  
+  const area = document.getElementById('answerArea');
+  
+  if (q.qtype === 'mcq') {
+    const options = shuffle([q.correctAnswer, ...q.wrongAnswers]);
+    const letters = ['A','B','C','D'];
+    area.innerHTML = `<div class="mcq-options">${options.map((opt, i) =>
+      `<button class="mcq-option" onclick="checkMCQ(this,'${escQ(opt)}','${escQ(q.correctAnswer)}')" id="opt${i}">
+        <span class="opt-letter">${letters[i]}</span>${opt}
+      </button>`
+    ).join('')}</div>`;
+  } else {
+    area.innerHTML = `
+      <div class="fitb-area">
+        <input type="text" class="fitb-input" id="fitbInput" placeholder="Type your answer..." onkeydown="if(event.key==='Enter')checkFITB()">
+        <button class="fitb-submit" onclick="checkFITB()">Submit</button>
+      </div>`;
+    setTimeout(() => document.getElementById('fitbInput')?.focus(), 100);
+  }
+}
+
+function escQ(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+function checkMCQ(btn, selected, correct) {
+  if (answered) return;
+  answered = true;
+  
+  document.querySelectorAll('.mcq-option').forEach(b => {
+    b.disabled = true;
+    const bText = b.textContent.replace(/^[ABCD]/,'').trim();
+    if (bText === correct) b.classList.add('reveal');
+  });
+  
+  const isCorrect = selected === correct;
+  if (isCorrect) {
+    btn.classList.add('correct'); quizScore++;
+  } else {
+    btn.classList.add('wrong');
+  }
+  
+  showFeedback(isCorrect, correct, quizQuestions[quizIdx].mnemonic);
+}
+
+function checkFITB() {
+  if (answered) return;
+  const input = document.getElementById('fitbInput');
+  const userAns = input.value.trim();
+  if (!userAns) return;
+  answered = true;
+  
+  const correct = quizQuestions[quizIdx].correctAnswer;
+  const isCorrect = userAns.toLowerCase().replace(/\s+/g,' ') === correct.toLowerCase().replace(/\s+/g,' ') ||
+                    correct.toLowerCase().includes(userAns.toLowerCase()) && userAns.length > 4;
+  
+  input.disabled = true;
+  document.querySelector('.fitb-submit').disabled = true;
+  
+  if (isCorrect) { input.classList.add('correct'); quizScore++; }
+  else { input.classList.add('wrong'); }
+  
+  showFeedback(isCorrect, correct, quizQuestions[quizIdx].mnemonic);
+}
+
+function showFeedback(isCorrect, correct, mnemonic) {
+  const fb = document.getElementById('feedbackBox');
+  fb.style.display = 'block';
+  fb.className = `feedback-box ${isCorrect ? 'correct' : 'wrong'}`;
+  fb.innerHTML = `
+    <div class="fb-label">${isCorrect ? '✅ Correct!' : '❌ Incorrect'}</div>
+    ${!isCorrect ? `<div>Correct answer: <strong>${correct}</strong></div>` : ''}
+    <div style="margin-top:0.5rem;font-size:0.82rem;opacity:0.85;">💡 Remember: ${mnemonic.substring(0,120)}...</div>
+  `;
+  // Track wrong parks for Learn mode highlighting
+  if (!isCorrect) {
+    const q = quizQuestions[quizIdx];
+    // If focus=park: correct answer IS the park name. If focus=state: extract park from question
+    if (q.focus === 'park') {
+      saveWrongPark(correct);
+    } else {
+      // question asks "X park is in which state" — extract park name from question HTML
+      const match = q.questionText.match(/<em>(.*?)<\/em>/);
+      if (match) saveWrongPark(match[1]);
+    }
+  }
+  document.getElementById('nextBtn').style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  quizIdx++;
+  if (quizIdx >= quizQuestions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quizActive').style.display = 'none';
+  const results = document.getElementById('quizResults');
+  results.style.display = 'block';
+  
+  const total = quizQuestions.length;
+  const pct = Math.round((quizScore/total)*100);
+  
+  let emoji = '😢', msg = 'Keep studying! Use the mnemonics to help you remember.';
+  if (pct >= 90) { emoji = '🏆'; msg = 'Outstanding! You\'ve mastered India\'s national parks!'; }
+  else if (pct >= 70) { emoji = '🎉'; msg = 'Great job! Just a bit more revision and you\'ll nail it!'; }
+  else if (pct >= 50) { emoji = '👍'; msg = 'Not bad! Review the mnemonics on the Learn page and try again.'; }
+  
+  document.getElementById('resultsEmoji').textContent = emoji;
+  document.getElementById('resultsScore').textContent = `${quizScore} / ${total}`;
+  document.getElementById('resultsMsg').textContent = `${pct}% correct. ${msg}`;
+}
+
+function restartQuiz() {
+  document.getElementById('quizResults').style.display = 'none';
+  document.getElementById('quizSetup').style.display = 'block';
+  document.getElementById('quizActive').style.display = 'none';
+}
+
+// ===== NAVIGATION =====
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const idx = ['learn','map','quiz','mapquiz'].indexOf(name);
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  if (name === 'map') {
+    setTimeout(() => { initLeafletMap(); if(leafletMap) leafletMap.invalidateSize(); }, 100);
+  }
+  if (name === 'mapquiz' && mqzMapInstance) {
+    setTimeout(() => mqzMapInstance.invalidateSize(), 100);
+  }
+}
+
+// ===== MAP QUIZ =====
+let mqzSettings = { mode: 'point', count: 10 };
+let mqzQuestions = [], mqzIdx = 0, mqzScore = 0, mqzAnswered = false;
+let mqzMapInstance = null, mqzMarkers = [], mqzClickLayer = null;
+
+function selectMqzPill(btn) {
+  const group = btn.dataset.mqzgroup;
+  document.querySelectorAll(`[data-mqzgroup="${group}"]`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (group === 'mode') {
+    mqzSettings.mode = btn.dataset.val;
+    document.getElementById('mqzModeDesc').textContent =
+      btn.dataset.val === 'point'
+        ? "You'll be told a park name → click the correct state on the map"
+        : "A marker appears on the map → choose the correct park name";
+  }
+  if (group === 'count') mqzSettings.count = parseInt(btn.dataset.val);
+}
+
+function buildMqzQuestions() {
+  // Get parks that have coordinates
+  const all = [];
+  statesData.forEach(s => s.parks.forEach(p => { if(parkCoords[p]) all.push({park:p, state:s.name, stateId:s.id, mnemonic:s.mnemonic}); }));
+  const pool = shuffle(all).slice(0, mqzSettings.count);
+  mqzQuestions = pool;
+}
+
+function startMapQuiz() {
+  buildMqzQuestions();
+  if (mqzQuestions.length < 4) { alert('Not enough parks with map coordinates. Try All India.'); return; }
+  mqzIdx = 0; mqzScore = 0; mqzAnswered = false;
+  document.getElementById('mqzSetup').style.display = 'none';
+  document.getElementById('mqzActive').style.display = 'block';
+  document.getElementById('mqzResults').style.display = 'none';
+  setTimeout(() => {
+    initMqzMap();
+    renderMapQuestion();
+  }, 80);
+}
+
+function initMqzMap() {
+  if (mqzMapInstance) { mqzMapInstance.remove(); mqzMapInstance = null; }
+  mqzMapInstance = L.map('mapQuizMap', { center: [22.5, 82.5], zoom: 4, minZoom: 3, maxZoom: 10 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 18,
+  }).addTo(mqzMapInstance);
+}
+
+function clearMqzMarkers() {
+  mqzMarkers.forEach(m => m.remove());
+  mqzMarkers = [];
+  if (mqzClickLayer) { mqzClickLayer.off('click'); mqzClickLayer = null; }
+  mqzMapInstance.off('click');
+}
+
+function renderMapQuestion() {
+  const q = mqzQuestions[mqzIdx];
+  const total = mqzQuestions.length;
+  mqzAnswered = false;
+  document.getElementById('mqzMeta').textContent = `Question ${mqzIdx+1} of ${total}`;
+  document.getElementById('mqzScore').textContent = `Score: ${mqzScore}`;
+  document.getElementById('mqzProgress').style.width = `${(mqzIdx/total)*100}%`;
+  document.getElementById('mqzFeedback').style.display = 'none';
+  document.getElementById('mqzNext').style.display = 'none';
+  clearMqzMarkers();
+
+  if (mqzSettings.mode === 'point') {
+    document.getElementById('mqzBadge').textContent = '🗺️ Identify the State';
+    document.getElementById('mqzQText').innerHTML = `Which state does <strong>${q.park}</strong> belong to? <span style="font-size:0.75rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400;">Click the correct state on the map</span>`;
+    document.getElementById('mapQuizMap').style.cursor = 'pointer';
+    document.getElementById('mqzOptions').style.display = 'none';
+    mqzMapInstance.off('click');
+    mqzMapInstance.setView([22.5, 82.5], 4);
+    // Place one clickable marker per state
+    statesData.forEach(s => {
+      if (!stateCentroids[s.id]) return;
+      const isCorrect = s.name === q.state;
+      const stateIcon = L.divIcon({
+        html: `<div style="width:13px;height:13px;background:#3d7a4f;border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);cursor:pointer;"></div>`,
+        className: '', iconSize:[13,13], iconAnchor:[6.5,6.5]
+      });
+      const m = L.marker(stateCentroids[s.id], { icon: stateIcon, interactive: true });
+      m.bindTooltip(s.name, { permanent: false, direction: 'top', offset: [0,-8], className: 'leaflet-tooltip' });
+      m.on('click', () => handleStatemarkerClick(s.name, q));
+      m.addTo(mqzMapInstance);
+      mqzMarkers.push(m);
+    });
+  } else {
+    // --- Pre-mark ALL parks as small grey dots (hoverable hints) ---
+    Object.entries(parkCoords).forEach(([park, coords]) => {
+      if (park === q.park) return;
+      const dimIcon = L.divIcon({
+        html: `<div style="width:9px;height:9px;background:#3d7a4f;opacity:0.55;border:1.5px solid white;border-radius:50%;"></div>`,
+        className: '', iconSize:[9,9], iconAnchor:[4.5,4.5]
+      });
+      const m = L.marker(coords, { icon: dimIcon, interactive: true });
+      m.bindTooltip(park, { permanent: false, direction: 'top', offset: [0,-6], className: 'leaflet-tooltip' });
+      m.addTo(mqzMapInstance);
+      mqzMarkers.push(m);
+    });
+    document.getElementById('mqzBadge').textContent = '🏷️ Name the Park';
+    document.getElementById('mqzQText').innerHTML = `Which national park is marked on the map? <span style="font-size:0.75rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400;">Hover other dots for reference</span>`;
+    document.getElementById('mapQuizMap').style.cursor = 'default';
+    mqzMapInstance.off('click');
+    // Place pulsing gold marker for target
+    const icon = L.divIcon({
+      html: `<div style="width:18px;height:18px;background:#e8a020;border:3px solid white;border-radius:50%;animation:pulse 1s infinite;box-shadow:0 0 0 4px rgba(232,160,32,0.4);"></div>`,
+      className: '', iconSize:[18,18], iconAnchor:[9,9]
+    });
+    const m = L.marker(parkCoords[q.park], {icon}).addTo(mqzMapInstance);
+    mqzMarkers.push(m);
+    mqzMapInstance.setView(parkCoords[q.park], 6);
+    // MCQ options
+    const allParks = Object.keys(parkCoords);
+    const wrongs = shuffle(allParks.filter(p => p !== q.park)).slice(0,3);
+    const opts = shuffle([q.park, ...wrongs]);
+    const optEl = document.getElementById('mqzOptions');
+    optEl.style.display = 'flex';
+    optEl.innerHTML = opts.map(o =>
+      `<button class="mqz-option" onclick="handleNameAnswer(this,'${escQ(o)}','${escQ(q.park)}')">${o}</button>`
+    ).join('');
+  }
+}
+
+function handleMapClick(e, q) {
+  if (mqzAnswered) return;
+  mqzAnswered = true;
+  mqzMapInstance.off('click');
+  const target = parkCoords[q.park];
+  const clickLL = e.latlng;
+  const dist = getDistKm(clickLL.lat, clickLL.lng, target[0], target[1]);
+  const isCorrect = dist < 150;
+  // Reveal correct location with green marker + popup
+  const correctIcon = L.divIcon({
+    html: `<div style="width:18px;height:18px;background:#27ae60;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
+    className:'', iconSize:[18,18], iconAnchor:[9,9]
+  });
+  const m1 = L.marker(target, {icon:correctIcon}).addTo(mqzMapInstance);
+  m1.bindPopup(`<b>✅ ${q.park}</b>`).openPopup();
+  mqzMarkers.push(m1);
+  // Show user's click
+  const clickIcon = L.divIcon({
+    html: `<div style="width:12px;height:12px;background:${isCorrect?'#27ae60':'#c0392b'};border:2px solid white;border-radius:50%;"></div>`,
+    className:'', iconSize:[12,12], iconAnchor:[6,6]
+  });
+  const m2 = L.marker([clickLL.lat, clickLL.lng], {icon:clickIcon}).addTo(mqzMapInstance);
+  mqzMarkers.push(m2);
+  if (isCorrect) mqzScore++;
+  else saveWrongPark(q.park); // track for Learn mode
+  showMqzFeedback(isCorrect, q.park, q.mnemonic, `Your click was ${Math.round(dist)} km from the correct location.`);
+}
+
+// ===== STATE CENTROIDS for map quiz =====
+const stateCentroids = {
+  'jk':         [33.50, 75.50],
+  'ladakh':     [34.20, 77.60],
+  'hp':         [31.80, 77.20],
+  'haryana':    [29.10, 76.50],
+  'rajasthan':  [26.50, 73.50],
+  'gujarat':    [22.30, 71.20],
+  'up':         [27.00, 80.80],
+  'uttarakhand':[30.30, 79.20],
+  'mp':         [23.50, 78.00],
+  'maharashtra':[19.70, 76.00],
+  'goa':        [15.35, 74.00],
+  'karnataka':  [14.50, 76.00],
+  'kerala':     [10.50, 76.20],
+  'tn':         [11.10, 78.60],
+  'ap':         [15.90, 79.80],
+  'telangana':  [17.80, 79.50],
+  'bihar':      [25.50, 85.50],
+  'jharkhand':  [23.60, 85.30],
+  'odisha':     [20.50, 84.50],
+  'wb':         [23.50, 87.80],
+  'chhattisgarh':[21.30, 81.80],
+  'assam':      [26.20, 92.50],
+  'arunachal':  [27.80, 94.00],
+  'meghalaya':  [25.40, 91.40],
+  'sikkim':     [27.50, 88.50],
+  'nagaland':   [26.20, 94.40],
+  'manipur':    [24.70, 93.90],
+  'tripura':    [23.80, 91.50],
+  'mizoram':    [23.20, 92.80],
+  'andaman':    [11.70, 92.70]
+};
+
+function handleStatemarkerClick(selectedState, q) {
+  if (mqzAnswered) return;
+  mqzAnswered = true;
+  const isCorrect = selectedState === q.state;
+  if (isCorrect) mqzScore++;
+  else saveWrongPark(q.park);
+  // Update all state markers: green for correct, red for wrong clicked
+  mqzMarkers.forEach(m => {
+    const tt = m.getTooltip();
+    if (!tt) return;
+    const label = tt.getContent();
+    let color, size;
+    if (label === q.state) { color = '#27ae60'; size = 16; }
+    else if (label === selectedState && !isCorrect) { color = '#c0392b'; size = 16; }
+    else { color = '#3d7a4f'; size = 13; }
+    m.setIcon(L.divIcon({
+      html: `<div style="width:${size}px;height:${size}px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
+      className: '', iconSize:[size,size], iconAnchor:[size/2,size/2]
+    }));
+    m.off('click');
+  });
+  showMqzFeedback(
+    isCorrect, q.park, q.mnemonic,
+    isCorrect
+      ? `Yes! <strong>${q.park}</strong> is in ${q.state}.`
+      : `<strong>${q.park}</strong> is in <strong>${q.state}</strong> (shown in green), not ${selectedState}.`
+  );
+}
+
+function handleNameAnswer(btn, selected, correct) {
+  if (mqzAnswered) return;
+  mqzAnswered = true;
+  document.querySelectorAll('.mqz-option').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === correct) b.classList.add('reveal');
+  });
+  const isCorrect = selected === correct;
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+  if (isCorrect) mqzScore++;
+  else saveWrongPark(correct); // track for Learn mode
+  const q = mqzQuestions[mqzIdx];
+  showMqzFeedback(isCorrect, correct, q.mnemonic, isCorrect ? '' : `The correct answer was <strong>${correct}</strong>.`);
+}
+
+function showMqzFeedback(isCorrect, correct, mnemonic, extra) {
+  const fb = document.getElementById('mqzFeedback');
+  fb.style.display = 'block';
+  fb.className = `map-quiz-feedback ${isCorrect ? 'correct' : 'wrong'}`;
+  fb.innerHTML = `<strong>${isCorrect ? '✅ Correct!' : `❌ Incorrect`}</strong>${extra ? `<div style="font-size:0.85rem;margin-top:0.3rem;">${extra}</div>` : ''}<div style="margin-top:0.4rem;font-size:0.78rem;opacity:0.85;">💡 ${mnemonic.substring(0,120)}…</div>`;
+  document.getElementById('mqzNext').style.display = 'inline-block';
+  document.getElementById('mqzScore').textContent = `Score: ${mqzScore}`;
+}
+
+function nextMapQuestion() {
+  mqzIdx++;
+  if (mqzIdx >= mqzQuestions.length) showMqzResults();
+  else renderMapQuestion();
+}
+
+function showMqzResults() {
+  document.getElementById('mqzActive').style.display = 'none';
+  document.getElementById('mqzResults').style.display = 'block';
+  const total = mqzQuestions.length;
+  const pct = Math.round((mqzScore/total)*100);
+  let emoji = '😢', msg = 'Keep practising! Study the Map page to get familiar with locations.';
+  if (pct >= 90) { emoji='🏆'; msg='Geographic master! You know exactly where India\'s parks are!'; }
+  else if (pct >= 70) { emoji='🎉'; msg='Great spatial awareness! A bit more map study and you\'ll nail it!'; }
+  else if (pct >= 50) { emoji='👍'; msg='Good effort! Use the Map tab to pin down the locations.'; }
+  document.getElementById('mqzResultEmoji').textContent = emoji;
+  document.getElementById('mqzResultScore').textContent = `${mqzScore} / ${total}`;
+  document.getElementById('mqzResultMsg').textContent = `${pct}% correct. ${msg}`;
+}
+
+function restartMapQuiz() {
+  document.getElementById('mqzResults').style.display = 'none';
+  document.getElementById('mqzSetup').style.display = 'block';
+  document.getElementById('mqzActive').style.display = 'none';
+}
+
+function getDistKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+            Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ===== INIT =====
+loadCustomMnemonics();
+loadWrongParks();
+renderLearn();
+renderMap();
+</script>
+</body>
+</html>
